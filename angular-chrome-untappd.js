@@ -4,6 +4,9 @@ angular.module("UntappdClient",[])
 	.factory('UntappdClient', function($q, $http, UNTAPPD_CONFIG){
 		var _this = this;
 
+		/**
+		* These can be overridden in individual apps
+		*/
     var config = angular.extend({
 				BASE_URL : 'https://untappd.com',
         API_BASE_URL : 'https://api.untappd.com/v4'
@@ -17,6 +20,9 @@ angular.module("UntappdClient",[])
 		var userInfoUrl = config.API_BASE_URL + "/user/info" + "?access_token=";
 		var friendsUrl = config.API_BASE_URL + "/user/friends/";
 
+		/**
+		* This token also represents the "logged in" state of this access token
+		*/
 		_this.token = null;
 
 		this.friendsUrl = function(userName) {
@@ -36,15 +42,15 @@ angular.module("UntappdClient",[])
 							if (chrome.runtime.lastError) {
 									console.error(chrome.runtime.lastError);
 							} else {
-								console.log("there was an error in authentication");
+								console.error("there was an error in authentication");
 							}
 							_this.token = null;
 							deferred.resolve(null);
 						} else {
-						console.log(redirect_url);
+						// console.log(redirect_url);
 						var paramPartOfURL = redirect_url.slice(redirect_url.indexOf('#') + 1);
 						var returnVal = paramPartOfURL.slice(paramPartOfURL.indexOf('=') + 1);
-						console.log("returning authentication token " + returnVal);
+						// console.log("returning authentication token " + returnVal);
 						_this.token = returnVal;
 						deferred.resolve(returnVal);
 					}
@@ -53,7 +59,7 @@ angular.module("UntappdClient",[])
 		}
 
 		this.getLoggedInUserData = function() {
-			console.log("retrieving user data with token " + _this.token);
+			// console.log("retrieving user data with token " + _this.token);
 			if (typeof _this.token === 'undefined') {
 				return _this.getLoggedInUserObject();
 			}
@@ -61,7 +67,7 @@ angular.module("UntappdClient",[])
 
 		this.getLoggedInUserObject = function() {
 			var deferred = $q.defer();
-			console.log(userInfoUrl + _this.token);
+			// console.log(userInfoUrl + _this.token);
 
 			$http.post(userInfoUrl + _this.token).success(function(data) {
 				// console.log(data.response);
@@ -73,7 +79,7 @@ angular.module("UntappdClient",[])
 
 		this.getFriendsObject = function(userName) {
 			var deferred = $q.defer();
-			console.log(_this.friendsUrl(userName));
+			// console.log(_this.friendsUrl(userName));
 
 			$http.post(_this.friendsUrl()).success(function(data) {
 				// console.log(data.response);
@@ -82,6 +88,7 @@ angular.module("UntappdClient",[])
 				});
 				return deferred.promise;
 		}
+
 		return {
 			/**
 			 * @ngdoc method
@@ -98,10 +105,24 @@ angular.module("UntappdClient",[])
 
 			/**
 			* @ngdoc method
+			* @name UntappdClient.setToken
+			* This method sets an authentication token manually.
+			*/
+			setToken: function(token) {
+				_this.token = token;
+				// console.log("authentication token manually set to " + _this.token);
+			},
+
+			/**
+			* @ngdoc method
 			* @name UntappdClient.logOut
-			* Removes the token from local memory.
+			* Removes the token from local memory and removes the cached auth token
 			*/
 			logOut: function() {
+	    	chrome.identity.removeCachedAuthToken(
+          { token: _this.token },
+          function() {
+          });
 				_this.token = null;
 			},
 
