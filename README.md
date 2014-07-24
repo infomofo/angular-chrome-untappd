@@ -57,3 +57,9 @@ The following api calls are currently supported by the untappd client.
 - *UntappdClient.authenticate* - Returns a Promise of the authentication token
 for the specified client id with the given extension id
 - *UntappdClient.setToken* - If you already have a token, you can set it here
+- *UntappdClient.logOut*
+- *UntappdClient.isLoggedIn*
+- *UntappdClient.isAuthenticating*
+- *UntappdClient.getLoggedInUserObject*
+- *UntappdClient.getUser*
+- *UntappdClient.getFriends*

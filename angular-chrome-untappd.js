@@ -17,16 +17,30 @@ angular.module("UntappdClient",[])
 			config.BASE_URL + '/oauth/authenticate?client_id=' + config.CLIENT_ID +
 			'&redirect_url=https://' + this.extensionId + '.chromiumapp.org/login&response_type=token';
 
-		var userInfoUrl = config.API_BASE_URL + "/user/info" + "?access_token=";
+		var userInfoUrl = config.API_BASE_URL + "/user/info";
 		var friendsUrl = config.API_BASE_URL + "/user/friends/";
 
+		_this.FRIENDLIMIT = 25;
 		/**
 		* This token also represents the "logged in" state of this access token
 		*/
 		_this.token = null;
 
-		this.friendsUrl = function(userName) {
-			return friendsUrl + userName + "?access_token=" + _this.token;
+		this.addToken = function(url) {
+			var separator = "?";
+			var index = url.indexOf("?");
+			if (index != -1) {
+				separator = "&";
+			}
+			return url + separator + "access_token=" + _this.token;
+		}
+
+		this.friendsUrl = function(userName, offset) {
+			return _this.addToken(friendsUrl + userName + "?offset=" + offset + "&limit=" + _this.FRIENDLIMIT);
+		}
+
+		this.userUrl = function(userName) {
+			return _this.addToken(userInfoUrl + "/" + userName);
 		}
 
 		this.getAuthenticationToken = function() {
@@ -69,24 +83,44 @@ angular.module("UntappdClient",[])
 			var deferred = $q.defer();
 			// console.log(userInfoUrl + _this.token);
 
-			$http.post(userInfoUrl + _this.token).success(function(data) {
+			$http.post(_this.addToken(userInfoUrl)).success(function(data) {
 				// console.log(data.response);
 				var user = data.response.user;
-					deferred.resolve(user);
-				});
-				return deferred.promise;
+				deferred.resolve(user);
+			});
+			return deferred.promise;
 		}
 
-		this.getFriendsObject = function(userName) {
+		this.getUserObject = function(userName) {
 			var deferred = $q.defer();
-			// console.log(_this.friendsUrl(userName));
+			console.log(_this.userUrl(userName));
 
-			$http.post(_this.friendsUrl()).success(function(data) {
+			$http.post(_this.userUrl(userName)).success(function(data) {
+				// console.log(data.response);
+				var user = data.response.user;
+				deferred.resolve(user);
+				});
+			return deferred.promise;
+		}
+
+		this.getFriendsObject = function(userName, offset) {
+			var deferred = $q.defer();
+			console.log(_this.friendsUrl(userName, offset));
+
+			$http.post(_this.friendsUrl(userName, offset)).success(function(data) {
 				// console.log(data.response);
 				var friends = data.response.items;
-				deferred.resolve(friends);
-				});
-				return deferred.promise;
+				if (data.response.count == _this.FRIENDLIMIT) {
+					// if there are 25 friends, attempt to call the api again to get more friends
+					_this.getFriendsObject(userName, offset + _this.FRIENDLIMIT)
+					.then (function(moreFriends) {
+							deferred.resolve(friends.concat(moreFriends));
+					});
+				} else {
+					deferred.resolve(friends);
+				}
+			});
+			return deferred.promise;
 		}
 
 		return {
@@ -155,6 +189,27 @@ angular.module("UntappdClient",[])
 			*/
 			getLoggedInUser: function() {
 				return _this.getLoggedInUserObject();
+			},
+
+			/**
+			* @ngdoc method
+			* @name UntappdClient.getUser
+			*
+			* @return {Promise} The value this promise will be resolved to will be the
+			* named user
+			*/
+			getUser: function(name) {
+				return _this.getUserObject(name);
+			},
+
+			/**
+			* @ngdoc method
+			* @name UntappdClient.getFriends
+			*
+			* @return {Promise} The value this promise will be the friends
+			*/
+			getFriends: function(user) {
+				return _this.getFriendsObject(user, 0);
 			}
 		}
 	});
