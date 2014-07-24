@@ -87,6 +87,13 @@ angular.module("UntappdClient",[])
 				// console.log(data.response);
 				var user = data.response.user;
 				deferred.resolve(user);
+			}).error(function(data, status, headers, config) {
+				if (chrome.runtime.lasterror){
+								console.error(chrome.runtime.lasterror.message);
+						} else {
+							console.error("http error retrieving user with url " + userInfoUrl + ": " + data);
+						}
+				deferred.reject(data);
 			});
 			return deferred.promise;
 		}
@@ -119,6 +126,13 @@ angular.module("UntappdClient",[])
 				} else {
 					deferred.resolve(friends);
 				}
+			}).error(function(data, status, headers, config) {
+				if (chrome.runtime.lasterror){
+								console.error(chrome.runtime.lasterror.message);
+						} else {
+							console.error("http error retrieving friends " + data);
+						}
+				deferred.reject(data);
 			});
 			return deferred.promise;
 		}
