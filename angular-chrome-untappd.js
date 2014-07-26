@@ -40,7 +40,7 @@ angular.module("UntappdClient",[])
 		}
 
 		this.userUrl = function(userName) {
-			return _this.addToken(userInfoUrl + "/" + userName);
+			return _this.addToken(userInfoUrl + "/" + userName + "?compact=true");
 		}
 
 		this.getAuthenticationToken = function() {
@@ -83,7 +83,7 @@ angular.module("UntappdClient",[])
 			var deferred = $q.defer();
 			// console.log(userInfoUrl + _this.token);
 
-			$http.post(_this.addToken(userInfoUrl)).success(function(data) {
+			$http.post(_this.addToken(_this.userUrl(""))).success(function(data) {
 				// console.log(data.response);
 				var user = data.response.user;
 				deferred.resolve(user);
@@ -100,13 +100,13 @@ angular.module("UntappdClient",[])
 
 		this.getUserObject = function(userName) {
 			var deferred = $q.defer();
-			console.log(_this.userUrl(userName));
+			// console.log(_this.userUrl(userName));
 
 			$http.post(_this.userUrl(userName)).success(function(data) {
 				// console.log(data.response);
 				var user = data.response.user;
 				deferred.resolve(user);
-				});
+			});
 			return deferred.promise;
 		}
 
@@ -213,6 +213,7 @@ angular.module("UntappdClient",[])
 			* named user
 			*/
 			getUser: function(name) {
+				console.log("calling getUser for " + name);
 				return _this.getUserObject(name);
 			},
 
