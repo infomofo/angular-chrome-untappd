@@ -14,6 +14,7 @@ Getting started with Untappd API
 complete the [Untappd API Key Form](http://untappd.com/api/register?register=new)
 2. Create a chrome extension
 3. Find your chrome extensions - for more details view the [google documentation](https://developer.chrome.com/extensions/tut_oauth).
+
 Instructions
 ------------
 
