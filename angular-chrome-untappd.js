@@ -128,10 +128,10 @@ angular.module("UntappdClient",[])
 				}
 			}).error(function(data, status, headers, config) {
 				if (chrome.runtime.lasterror){
-								console.error(chrome.runtime.lasterror.message);
-						} else {
-							console.error("http error retrieving friends " + data);
-						}
+					console.error(chrome.runtime.lasterror.message);
+				} else {
+					console.error("http error retrieving friends " + data);
+				}
 				deferred.reject(data);
 			});
 			return deferred.promise;
@@ -161,6 +161,13 @@ angular.module("UntappdClient",[])
 				// console.log("authentication token manually set to " + _this.token);
 			},
 
+			/**
+			* @ngdoc method
+			* @name UntappdClient.getToken
+			*/
+			getToken: function() {
+				return _this.token;
+			},
 			/**
 			* @ngdoc method
 			* @name UntappdClient.logOut
