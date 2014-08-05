@@ -47,8 +47,6 @@ angular.module("UntappdClient",[])
 			_this.token = "authenticating";
 			var deferred = $q.defer();
 
-			// console.log(_this.token);
-			// console.log(_this.authenticationUrl);
 			chrome.identity.launchWebAuthFlow(
 				{'url': _this.authenticationUrl, 'interactive': true},
 					function(redirect_url) {
@@ -61,10 +59,8 @@ angular.module("UntappdClient",[])
 							_this.token = null;
 							deferred.resolve(null);
 						} else {
-						// console.log(redirect_url);
 						var paramPartOfURL = redirect_url.slice(redirect_url.indexOf('#') + 1);
 						var returnVal = paramPartOfURL.slice(paramPartOfURL.indexOf('=') + 1);
-						// console.log("returning authentication token " + returnVal);
 						_this.token = returnVal;
 						deferred.resolve(returnVal);
 					}
@@ -73,7 +69,6 @@ angular.module("UntappdClient",[])
 		}
 
 		this.getLoggedInUserData = function() {
-			// console.log("retrieving user data with token " + _this.token);
 			if (typeof _this.token === 'undefined') {
 				return _this.getLoggedInUserObject();
 			}
@@ -81,10 +76,8 @@ angular.module("UntappdClient",[])
 
 		this.getLoggedInUserObject = function() {
 			var deferred = $q.defer();
-			// console.log(userInfoUrl + _this.token);
 
 			$http.post(_this.addToken(_this.userUrl(""))).success(function(data) {
-				// console.log(data.response);
 				var user = data.response.user;
 				deferred.resolve(user);
 			}).error(function(data, status, headers, config) {
@@ -100,10 +93,8 @@ angular.module("UntappdClient",[])
 
 		this.getUserObject = function(userName) {
 			var deferred = $q.defer();
-			// console.log(_this.userUrl(userName));
 
 			$http.post(_this.userUrl(userName)).success(function(data) {
-				// console.log(data.response);
 				var user = data.response.user;
 				deferred.resolve(user);
 			});
@@ -112,10 +103,8 @@ angular.module("UntappdClient",[])
 
 		this.getFriendsObject = function(userName, offset) {
 			var deferred = $q.defer();
-			console.log(_this.friendsUrl(userName, offset));
 
 			$http.post(_this.friendsUrl(userName, offset)).success(function(data) {
-				// console.log(data.response);
 				var friends = data.response.items;
 				if (data.response.count == _this.FRIENDLIMIT) {
 					// if there are 25 friends, attempt to call the api again to get more friends
@@ -158,7 +147,6 @@ angular.module("UntappdClient",[])
 			*/
 			setToken: function(token) {
 				_this.token = token;
-				// console.log("authentication token manually set to " + _this.token);
 			},
 
 			/**
@@ -220,7 +208,6 @@ angular.module("UntappdClient",[])
 			* named user
 			*/
 			getUser: function(name) {
-				console.log("calling getUser for " + name);
 				return _this.getUserObject(name);
 			},
 
