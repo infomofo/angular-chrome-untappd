@@ -119,7 +119,7 @@ angular.module("UntappdClient",[])
 				if (chrome.runtime.lasterror){
 					console.error(chrome.runtime.lasterror.message);
 				} else {
-					console.error("http error retrieving friends " + data);
+					console.error("http error retrieving friends " + angular.toJson(data));
 				}
 				deferred.reject(data);
 			});
