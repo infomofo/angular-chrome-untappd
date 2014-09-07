@@ -39,8 +39,12 @@ angular.module("UntappdClient",[])
 			return _this.addToken(friendsUrl + userName + "?offset=" + offset + "&limit=" + _this.FRIENDLIMIT);
 		}
 
-		this.userUrl = function(userName) {
-			return _this.addToken(userInfoUrl + "/" + userName + "?compact=true");
+		this.userUrl = function(userName, compact) {
+			var url = userInfoUrl.concat("/", userName);
+			if (compact) {
+				url = url.concat("?compact=true")
+			}
+			return _this.addToken(url);
 		}
 
 		this.getAuthenticationToken = function() {
@@ -74,10 +78,10 @@ angular.module("UntappdClient",[])
 			}
 		}
 
-		this.getLoggedInUserObject = function() {
+		this.getLoggedInUserObject = function(compact) {
 			var deferred = $q.defer();
 
-			$http.post(_this.addToken(_this.userUrl(""))).success(function(data) {
+			$http.post(_this.addToken(_this.userUrl("", compact))).success(function(data) {
 				var user = data.response.user;
 				deferred.resolve(user);
 			}).error(function(data, status, headers, config) {
@@ -91,10 +95,10 @@ angular.module("UntappdClient",[])
 			return deferred.promise;
 		}
 
-		this.getUserObject = function(userName) {
+		this.getUserObject = function(userName, compact) {
 			var deferred = $q.defer();
 
-			$http.post(_this.userUrl(userName)).success(function(data) {
+			$http.post(_this.userUrl(userName, compact)).success(function(data) {
 				var user = data.response.user;
 				deferred.resolve(user);
 			});
@@ -207,8 +211,8 @@ angular.module("UntappdClient",[])
 			* @return {Promise} The value this promise will be resolved to will be the
 			* named user
 			*/
-			getUser: function(name) {
-				return _this.getUserObject(name);
+			getUser: function(name, compact) {
+				return _this.getUserObject(name, compact);
 			},
 
 			/**
