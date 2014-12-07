@@ -5,25 +5,26 @@ angular.module("UntappdClient",[])
 		var _this = this;
 
 		/**
-		* These can be overridden in individual apps
-		*/
-    var config = angular.extend({
-				BASE_URL : 'https://untappd.com',
-        API_BASE_URL : 'https://api.untappd.com/v4'
-    }, UNTAPPD_CONFIG);
+		 * These can be overridden in individual apps
+		 */
+		var config = angular.extend({
+			BASE_URL : 'https://untappd.com',
+			API_BASE_URL : 'https://api.untappd.com/v4'
+		}, UNTAPPD_CONFIG);
 
 		this.extensionId = chrome.runtime.id;
 		this.authenticationUrl =
 			config.BASE_URL + '/oauth/authenticate?client_id=' + config.CLIENT_ID +
 			'&redirect_url=https://' + this.extensionId + '.chromiumapp.org/login&response_type=token';
+		this.logoutUrl = 'https://untappd.com/logout';
 
 		var userInfoUrl = config.API_BASE_URL + "/user/info";
 		var friendsUrl = config.API_BASE_URL + "/user/friends/";
 
 		_this.FRIENDLIMIT = 25;
 		/**
-		* This token also represents the "logged in" state of this access token
-		*/
+		 * This token also represents the "logged in" state of this access token
+		 */
 		_this.token = null;
 
 		this.addToken = function(url) {
@@ -53,22 +54,38 @@ angular.module("UntappdClient",[])
 
 			chrome.identity.launchWebAuthFlow(
 				{'url': _this.authenticationUrl, 'interactive': true},
-					function(redirect_url) {
-						if (redirect_url == undefined) {
-							if (chrome.runtime.lastError) {
-									console.error(chrome.runtime.lastError);
-							} else {
-								console.error("there was an error in authentication");
-							}
-							_this.token = null;
-							deferred.resolve(null);
+				function(redirect_url) {
+					if (redirect_url == undefined) {
+						if (chrome.runtime.lastError) {
+							console.error(chrome.runtime.lastError);
 						} else {
+							console.error("there was an error in authentication");
+						}
+						_this.token = null;
+						deferred.resolve(null);
+					} else {
 						var paramPartOfURL = redirect_url.slice(redirect_url.indexOf('#') + 1);
 						var returnVal = paramPartOfURL.slice(paramPartOfURL.indexOf('=') + 1);
 						_this.token = returnVal;
 						deferred.resolve(returnVal);
 					}
 				});
+			return deferred.promise;
+		}
+
+		this.removeAuthenticationToken = function() {
+			var deferred = $q.defer();
+			chrome.identity.launchWebAuthFlow(
+				{'url': _this.logoutUrl, 'interactive': false},
+				function() {
+					chrome.identity.removeCachedAuthToken(
+						{ token: _this.token },
+						function() {
+						});
+					_this.token = null;
+					deferred.resolve(null);
+				}
+			);
 			return deferred.promise;
 		}
 
@@ -86,10 +103,10 @@ angular.module("UntappdClient",[])
 				deferred.resolve(user);
 			}).error(function(data, status, headers, config) {
 				if (chrome.runtime.lasterror){
-								console.error(chrome.runtime.lasterror.message);
-						} else {
-							console.error("http error retrieving user with url " + userInfoUrl + ": " + data);
-						}
+					console.error(chrome.runtime.lasterror.message);
+				} else {
+					console.error("http error retrieving user with url " + userInfoUrl + ": " + data);
+				}
 				deferred.reject(data);
 			});
 			return deferred.promise;
@@ -113,8 +130,8 @@ angular.module("UntappdClient",[])
 				if (data.response.count == _this.FRIENDLIMIT) {
 					// if there are 25 friends, attempt to call the api again to get more friends
 					_this.getFriendsObject(userName, offset + _this.FRIENDLIMIT)
-					.then (function(moreFriends) {
-							deferred.resolve(friends.concat(moreFriends));
+						.then (function(moreFriends) {
+						deferred.resolve(friends.concat(moreFriends));
 					});
 				} else {
 					deferred.resolve(friends);
@@ -145,82 +162,79 @@ angular.module("UntappdClient",[])
 			},
 
 			/**
-			* @ngdoc method
-			* @name UntappdClient.setToken
-			* This method sets an authentication token manually.
-			*/
+			 * @ngdoc method
+			 * @name UntappdClient.setToken
+			 * This method sets an authentication token manually.
+			 */
 			setToken: function(token) {
 				_this.token = token;
 			},
 
 			/**
-			* @ngdoc method
-			* @name UntappdClient.getToken
-			*/
+			 * @ngdoc method
+			 * @name UntappdClient.getToken
+			 */
 			getToken: function() {
 				return _this.token;
 			},
 			/**
-			* @ngdoc method
-			* @name UntappdClient.logOut
-			* Removes the token from local memory and removes the cached auth token
-			*/
+			 * @ngdoc method
+			 * @name UntappdClient.logOut
+			 * Removes the token from local memory and removes the cached auth token
+			 */
 			logOut: function() {
-	    	chrome.identity.removeCachedAuthToken(
-          { token: _this.token },
-          function() {
-          });
-				_this.token = null;
-			},
+				return _this.removeAuthenticationToken();
+			}
+			,
 
 			/**
-			*	@ngdoc method
-			* @name UntappdClient.isLoggedOut
-			*
-			* @return {Boolean} true if the user is logged in, false if they are logged out
-			*/
+			 *	@ngdoc method
+			 * @name UntappdClient.isLoggedOut
+			 *
+			 * @return {Boolean} true if the user is logged in, false if they are logged out
+			 */
 			isLoggedIn: function() {
 				return angular.isDefined(_this.token) && _this.token != null;
 			},
 
 			/**
-			*	@ngdoc method
-			* @name UntappdClient.isAuthenticating
-			*
-			* @return {Boolean} true if the user is currently authenticating
-			*/
+			 *	@ngdoc method
+			 * @name UntappdClient.isAuthenticating
+			 *
+			 * @return {Boolean} true if the user is currently authenticating
+			 */
 			isAuthenticating: function() {
 				return _this.token == "authenticating";
 			},
 
 			/**
-			* @ngdoc method
-			* @name UntappdClient.getLoggedInUser
-			*
-			* @return {Promise} The value this promise will be resolved to will be the
-			* logged in user
-			*/
+			 * @ngdoc method
+			 * @name UntappdClient.getLoggedInUser
+			 *
+			 * @return {Promise} The value this promise will be resolved to will be the
+			 * logged in user
+			 */
 			getLoggedInUser: function() {
 				return _this.getLoggedInUserObject();
 			},
 
 			/**
-			* @ngdoc method
-			* @name UntappdClient.getUser
-			*
-			* @return {Promise} The value this promise will be resolved to will be the
-			* named user
-			*/
+			 * @ngdoc method
+			 * @name UntappdClient.getUser
+			 *
+			 * @return {Promise} The value this promise will be resolved to will be the
+			 * named user
+			 */
 			getUser: function(name, compact) {
 				return _this.getUserObject(name, compact);
 			},
 
 			/**
-			* @ngdoc method
-			* @name UntappdClient.getFriends
-			*
-			* @return {Promise} The value this promise will be the friends
-			*/
+			 * @ngdoc method
+			 * @name UntappdClient.getFriends
+			 *
+			 * @return {Promise} The value this promise will be the friends
+			 */
 			getFriends: function(user) {
 				return _this.getFriendsObject(user, 0);
 			}
