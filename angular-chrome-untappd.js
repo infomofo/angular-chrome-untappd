@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module("UntappdClient",[])
+angular.module('UntappdClient',[])
 	.factory('UntappdClient', function($q, $http, UNTAPPD_CONFIG){
 		var _this = this;
 
@@ -18,38 +18,38 @@ angular.module("UntappdClient",[])
 			'&redirect_url=https://' + this.extensionId + '.chromiumapp.org/login&response_type=token';
 		this.logoutUrl = 'https://untappd.com/logout';
 
-		var userInfoUrl = config.API_BASE_URL + "/user/info";
-		var friendsUrl = config.API_BASE_URL + "/user/friends/";
+		var userInfoUrl = config.API_BASE_URL + '/user/info';
+		var friendsUrl = config.API_BASE_URL + '/user/friends/';
 
 		_this.FRIENDLIMIT = 25;
 		/**
-		 * This token also represents the "logged in" state of this access token
+		 * This token also represents the 'logged in' state of this access token
 		 */
 		_this.token = null;
 
 		this.addToken = function(url) {
-			var separator = "?";
-			var index = url.indexOf("?");
+			var separator = '?';
+			var index = url.indexOf('?');
 			if (index != -1) {
-				separator = "&";
+				separator = '&';
 			}
-			return url + separator + "access_token=" + _this.token;
-		}
+			return url + separator + 'access_token=' + _this.token;
+		};
 
 		this.friendsUrl = function(userName, offset) {
-			return _this.addToken(friendsUrl + userName + "?offset=" + offset + "&limit=" + _this.FRIENDLIMIT);
-		}
+			return _this.addToken(friendsUrl + userName + '?offset=' + offset + '&limit=' + _this.FRIENDLIMIT);
+		};
 
 		this.userUrl = function(userName, compact) {
-			var url = userInfoUrl.concat("/", userName);
+			var url = userInfoUrl.concat('/', userName);
 			if (compact) {
-				url = url.concat("?compact=true")
+				url = url.concat('?compact=true')
 			}
 			return _this.addToken(url);
-		}
+		};
 
 		this.getAuthenticationToken = function() {
-			_this.token = "authenticating";
+			_this.token = 'authenticating';
 			var deferred = $q.defer();
 
 			chrome.identity.launchWebAuthFlow(
@@ -59,7 +59,7 @@ angular.module("UntappdClient",[])
 						if (chrome.runtime.lastError) {
 							console.error(chrome.runtime.lastError);
 						} else {
-							console.error("there was an error in authentication");
+							console.error('there was an error in authentication');
 						}
 						_this.token = null;
 						deferred.resolve(null);
@@ -71,46 +71,53 @@ angular.module("UntappdClient",[])
 					}
 				});
 			return deferred.promise;
-		}
+		};
 
-		this.removeAuthenticationToken = function() {
-			var deferred = $q.defer();
-			chrome.identity.launchWebAuthFlow(
-				{'url': _this.logoutUrl, 'interactive': false},
-				function() {
-					chrome.identity.removeCachedAuthToken(
-						{ token: _this.token },
-						function() {
-						});
-					_this.token = null;
-					deferred.resolve(null);
-				}
-			);
-			return deferred.promise;
-		}
+    this.removeAuthenticationToken = function () {
+      var deferred = $q.defer();
+
+      try {
+        chrome.identity.launchWebAuthFlow(
+          {'url': _this.logoutUrl, 'interactive': false},
+          function () {
+            chrome.identity.removeCachedAuthToken(
+              {token: _this.token},
+              function () {
+              });
+
+          }
+        );
+      } catch (e) {
+        // No-Op - the chrome authentication flow will throw an error but this is expected;
+      } finally {
+        _this.token = null;
+        deferred.resolve(null);
+      }
+      return deferred.promise;
+    };
 
 		this.getLoggedInUserData = function() {
 			if (typeof _this.token === 'undefined') {
 				return _this.getLoggedInUserObject();
 			}
-		}
+		};
 
 		this.getLoggedInUserObject = function(compact) {
 			var deferred = $q.defer();
 
-			$http.post(_this.addToken(_this.userUrl("", compact))).success(function(data) {
+			$http.post(_this.addToken(_this.userUrl('', compact))).success(function(data) {
 				var user = data.response.user;
 				deferred.resolve(user);
 			}).error(function(data, status, headers, config) {
 				if (chrome.runtime.lasterror){
 					console.error(chrome.runtime.lasterror.message);
 				} else {
-					console.error("http error retrieving user with url " + userInfoUrl + ": " + data);
+					console.error('http error retrieving user with url ' + userInfoUrl + ': ' + data);
 				}
 				deferred.reject(data);
 			});
 			return deferred.promise;
-		}
+		};
 
 		this.getUserObject = function(userName, compact) {
 			var deferred = $q.defer();
@@ -120,7 +127,7 @@ angular.module("UntappdClient",[])
 				deferred.resolve(user);
 			});
 			return deferred.promise;
-		}
+		};
 
 		this.getFriendsObject = function(userName, offset) {
 			var deferred = $q.defer();
@@ -140,12 +147,12 @@ angular.module("UntappdClient",[])
 				if (chrome.runtime.lasterror){
 					console.error(chrome.runtime.lasterror.message);
 				} else {
-					console.error("http error retrieving friends " + angular.toJson(data));
+					console.error('http error retrieving friends ' + angular.toJson(data));
 				}
 				deferred.reject(data);
 			});
 			return deferred.promise;
-		}
+		};
 
 		return {
 			/**
@@ -204,7 +211,7 @@ angular.module("UntappdClient",[])
 			 * @return {Boolean} true if the user is currently authenticating
 			 */
 			isAuthenticating: function() {
-				return _this.token == "authenticating";
+				return _this.token == 'authenticating';
 			},
 
 			/**

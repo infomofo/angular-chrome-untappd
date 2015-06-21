@@ -1,0 +1,23 @@
+{
+  "name": "angular-chrome-untappd",
+  "main": "angular-chrome-untappd.js",
+  "version": "1.0.0",
+  "homepage": "https://github.com/infomofo/angular-chrome-untappd",
+  "authors": [
+    "Will Chiong <will@infomofo.com>"
+  ],
+  "description": "A client for accessing the Untappd API in a chrome extension with angular",
+  "keywords": [
+    "angular",
+    "chrome",
+    "untappd"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
